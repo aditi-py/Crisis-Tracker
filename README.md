@@ -42,6 +42,8 @@ The output Google Sheet feeds a Looker dashboard with two views:
 
 ##  Workflow Structure
 
+![Workflow Diagram](workflow-diagram.png)
+
 ```
 Manual Trigger
      HTTP Request (fetch dataset from Google Drive)
