@@ -1,0 +1,351 @@
+{
+  "name": "Mental Health Classifier",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -144
+      ],
+      "id": "f5334466-f91a-4c22-a6c6-f66203effd7a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5-TURBO"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a mental health crisis classifier. Analyze messages and respond with ONLY ONE WORD: HIGH, MODERATE, or LOW - Always capitalize. Nothing else."
+            },
+            {
+              "content": "={{ $json.message }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        -144
+      ],
+      "id": "a6f90c2c-bc0c-4bff-b22b-17bd82f51d9c",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "executeOnce": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "inxdA8170vvCTrpN",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://drive.google.com/uc?export=download&id=1yk4_1St7KU-M3u9d1IjTPTUsr4pxa8nI",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -80,
+        -320
+      ],
+      "id": "ec70e365-f979-437d-a2f5-ee117a6dacfb",
+      "name": "Get Data"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1OjGuleVRot2l-JmlM2jtHn-4uXEEifAFL7N_GK_UtjE",
+          "cachedResultName": "dreaddit-train",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OjGuleVRot2l-JmlM2jtHn-4uXEEifAFL7N_GK_UtjE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 1271653225,
+          "cachedResultName": "dreaddit-train",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OjGuleVRot2l-JmlM2jtHn-4uXEEifAFL7N_GK_UtjE/edit#gid=1271653225"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "detectAutomatically"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        176,
+        -144
+      ],
+      "id": "748f8bb5-6a14-48ee-9f77-6a27e327682f",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Q1HOJhxFEQ4B4eMz",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Get the original data from the Loop (this has your sheet columns)\nconst loopData = $('Loop Over Items').item.json;\n\n// Get the crisis level from OpenAI\nconst crisisLevel = $input.item.json.output[0].content[0].text;\n\n// Combine the original sheet data with the new crisis level\nreturn {\n  ...loopData,           // All original columns from your sheet\n  crisis_level: crisisLevel  // New crisis rating\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        -144
+      ],
+      "id": "ba3fbd77-f927-42f0-9ea0-75f61c13d5e1",
+      "name": "Code in JavaScript",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "19N_n_TXTzEr4tI7t6_TsPl-VQDxfc8lB6GcK0i36J60",
+          "mode": "list",
+          "cachedResultName": "Mental Health Results",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19N_n_TXTzEr4tI7t6_TsPl-VQDxfc8lB6GcK0i36J60/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19N_n_TXTzEr4tI7t6_TsPl-VQDxfc8lB6GcK0i36J60/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "crisis_level": "={{ $json.crisis_level }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "subreddit",
+              "displayName": "subreddit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "post_id",
+              "displayName": "post_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sentence_range",
+              "displayName": "sentence_range",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "crisis_level",
+              "displayName": "crisis_level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1200,
+        -144
+      ],
+      "id": "7dd03d65-3a54-4b27-b751-1fef95b01812",
+      "name": "Append row in sheet",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Q1HOJhxFEQ4B4eMz",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        400,
+        -144
+      ],
+      "id": "25754e70-0aa9-4e31-8876-8a2eb8f2f095",
+      "name": "Loop Over Items",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Data": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0876d96f-490f-4f2c-8ad8-9755292327fd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4f2f1871d7a0002c51b055183079b992b8d98fa3f6dcc0afae7df3467b66ba75"
+  },
+  "id": "W32eFZ5byOR1YrWgK0MVk",
+  "tags": []
+}
